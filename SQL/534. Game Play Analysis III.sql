@@ -1,0 +1,84 @@
+-- Table: Activity
+
+-- +--------------+---------+
+-- | Column Name  | Type    |
+-- +--------------+---------+
+-- | player_id    | int     |
+-- | device_id    | int     |
+-- | event_date   | date    |
+-- | games_played | int     |
+-- +--------------+---------+
+-- (player_id, event_date) is the primary key of this table.
+-- This table shows the activity of players of some games.
+-- Each row is a record of a player who logged in and played a number of games (possibly 0) before logging out on someday using some device.
+ 
+
+-- Write an SQL query to report for each player and date, how many games played so far by the player. That is, the total number of games played by the player until that date. Check the example for clarity.
+
+-- Return the result table in any order.
+
+-- The query result format is in the following example.
+
+ 
+
+-- Example 1:
+
+-- Input: 
+-- Activity table:
+-- +-----------+-----------+------------+--------------+
+-- | player_id | device_id | event_date | games_played |
+-- +-----------+-----------+------------+--------------+
+-- | 1         | 2         | 2016-03-01 | 5            |
+-- | 1         | 2         | 2016-05-02 | 6            |
+-- | 1         | 3         | 2017-06-25 | 1            |
+-- | 3         | 1         | 2016-03-02 | 0            |
+-- | 3         | 4         | 2018-07-03 | 5            |
+-- +-----------+-----------+------------+--------------+
+-- Output: 
+-- +-----------+------------+---------------------+
+-- | player_id | event_date | games_played_so_far |
+-- +-----------+------------+---------------------+
+-- | 1         | 2016-03-01 | 5                   |
+-- | 1         | 2016-05-02 | 11                  |
+-- | 1         | 2017-06-25 | 12                  |
+-- | 3         | 2016-03-02 | 0                   |
+-- | 3         | 2018-07-03 | 5                   |
+-- +-----------+------------+---------------------+
+-- Explanation: 
+-- For the player with id 1, 5 + 6 = 11 games played by 2016-05-02, and 5 + 6 + 1 = 12 games played by 2017-06-25.
+-- For the player with id 3, 0 + 5 = 5 games played by 2018-07-03.
+-- Note that for each player we only care about the days when the player logged in.
+
+-- solution 1 3006 ms
+
+
+select 
+ player_id,
+ event_date,
+ (select 
+    sum(games_played) games_played_so_far 
+    from activity sub
+    where datediff(day , sub.event_date, a.event_date) >= 0
+    and a.player_id = sub.player_id
+    group by player_id
+ ) games_played_so_far
+from activity a
+
+-- solution 5159 ms
+
+select 
+player_id,
+event_date,
+sum(games_played) over (partition by player_id order by event_date) games_played_so_far
+from activity 
+
+-- solution 2 3942ms
+select 
+    a.player_id,
+    a.event_date,
+    sum(aa.games_played) as games_played_so_far 
+from activity a
+inner join activity aa
+    on a.player_id = aa.player_id
+    and a.event_date >= aa.event_date
+group by a.player_id, a.event_date

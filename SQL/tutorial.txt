@@ -1,0 +1,1 @@
+1. https://towardsdatascience.com/a-guide-to-advanced-sql-window-functions-f63f2642cbf9
